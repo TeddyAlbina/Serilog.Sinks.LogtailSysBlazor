@@ -8,7 +8,7 @@ var logConfig = new LoggerConfiguration()
     .WriteTo.Console();
  var log = logConfig
     .WriteTo.Logtail(
-        token: "8txbp8NA9s8n8gbbv8nH4RRz",
+        token: "",
         appName: "HI"
     )
     .Enrich.FromLogContext()
