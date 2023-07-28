@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
+
 using Serilog.Events;
 using Serilog.Formatting;
 
@@ -11,7 +13,7 @@ namespace Serilog.Sinks.Logtail
     /// </summary>
     public abstract class LogtailFormatterBase : ILogtailFormatter
     {
-        private readonly Facility facility;
+        protected readonly Facility facility;
 
         /// <summary>See <see cref="Formatting.ITextFormatter"/>.</summary>
         private readonly ITextFormatter? templateFormatter;
@@ -20,8 +22,8 @@ namespace Serilog.Sinks.Logtail
 
         /// <summary>Overrides the Hostname value in the syslog packet header. Max length 255. Defaults to <c>Environment.MachineName</c>.</summary>
         protected readonly string Host;
-        protected static readonly string ProcessId = Process.GetCurrentProcess().Id.ToString();
-        protected static readonly string ProcessName = Process.GetCurrentProcess().ProcessName;
+        protected static string ProcessId { get; private set; } = "";
+        protected static string ProcessName { get; private set; } = "";
 
         /// <summary>
         /// Common functionality for a derived syslog formatter class.
@@ -30,12 +32,31 @@ namespace Serilog.Sinks.Logtail
         /// <param name="templateFormatter"><inheritdoc cref="templateFormatter" path="/summary"/></param>
         /// <param name="sourceHost"><inheritdoc cref="Host" path="/summary"/></param>
         /// <param name="severityMapping">Provide your own method to override the default mapping logic of a Serilog <see cref="LogEventLevel"/></param>
+        /// <param name="processId">The process identifier</param>
+        /// <param name="processName">The process name</param>
         protected LogtailFormatterBase(
             Facility facility,
             ITextFormatter? templateFormatter,
             string? sourceHost = null,
-            Func<LogEventLevel, Severity>? severityMapping = null)
+            Func<LogEventLevel, Severity>? severityMapping = null,
+            string? processId = null,
+            string? processName = null)
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("Browser")))
+            {
+                ProcessId = processId ?? string.Empty;
+
+                ProcessName = processName ?? string.Empty;
+            } 
+            else
+            {
+                ProcessId = string.IsNullOrEmpty(processId) ?
+                    Process.GetCurrentProcess().Id.ToString() : processId!;
+
+                ProcessName = string.IsNullOrEmpty(processName) ?
+                     Process.GetCurrentProcess().Id.ToString() : processName!;
+            }
+
             this.facility = facility;
             this.templateFormatter = templateFormatter;
             this.severityMapping = severityMapping ?? DefaultLogLevelToSeverityMap;

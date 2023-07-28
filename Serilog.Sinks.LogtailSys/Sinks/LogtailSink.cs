@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+
 using Serilog.Debugging;
 using Serilog.Events;
 using Serilog.Sinks.PeriodicBatching;
@@ -15,15 +16,19 @@ namespace Serilog.Sinks.Logtail
     /// </summary>
     public class LogtailSink : IBatchedLogEventSink, IDisposable
     {
-        private readonly ILogtailFormatter formatter;
-        private readonly UdpClient client;
-        private readonly IPEndPoint endpoint;
+        private const string IngestionUri = "https://in.logs.betterstack.com";
+        private static readonly HttpClient httpClient = new ()
+        {
+            BaseAddress = new Uri(IngestionUri, UriKind.Absolute)
+        };
 
-        public LogtailSink(IPEndPoint endpoint, ILogtailFormatter formatter)
+        private readonly ILogtailFormatter formatter;
+
+        public LogtailSink(ILogtailFormatter formatter, string token)
         {
             this.formatter = formatter;
-            this.endpoint = endpoint;
-            client = new UdpClient(endpoint.AddressFamily);
+            httpClient.DefaultRequestHeaders.Authorization
+                = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
         }
 
         /// <summary>
@@ -35,26 +40,20 @@ namespace Serilog.Sinks.Logtail
             foreach (var logEvent in events)
             {
                 var message = formatter.FormatMessage(logEvent);
-                var data = Encoding.UTF8.GetBytes(message);
 
                 try
                 {
-                    await client.SendAsync(data, data.Length, endpoint).ConfigureAwait(false);
+                    await httpClient.PostAsync("/", new StringContent(message, Encoding.UTF8, "application/json")).ConfigureAwait(false);
                 }
                 catch (SocketException ex)
                 {
-                    SelfLog.WriteLine($"[{nameof(LogtailSink)}] error while sending log event to syslog {endpoint.Address}:{endpoint.Port} - {ex.Message}\n{ex.StackTrace}");
+                    SelfLog.WriteLine($"[{nameof(LogtailSink)}] error while sending log event to syslog {ex.Message}\n{ex.StackTrace}");
                 }
             }
         }
 
-        public Task OnEmptyBatchAsync()
-            => Task.CompletedTask;
+        public Task OnEmptyBatchAsync() => Task.CompletedTask;
 
-        public void Dispose()
-        {
-            client.Close();
-            client.Dispose();
-        }
+        public void Dispose() => httpClient.Dispose();
     }
 }

@@ -16,7 +16,7 @@ namespace Serilog
     /// </summary>
     public static class LogtailLoggerConfigurationExtensions
     {
-        private static readonly PeriodicBatchingSinkOptions DefaultBatchOptions = new PeriodicBatchingSinkOptions
+        private static readonly PeriodicBatchingSinkOptions DefaultBatchOptions = new()
         {
             BatchSizeLimit = 1000,
             Period = TimeSpan.FromSeconds(2),
@@ -44,9 +44,7 @@ namespace Serilog
         public static LoggerConfiguration Logtail(
             this LoggerSinkConfiguration loggerSinkConfig,
             string token,
-            string tokenKey = "logtail@11993 source_token",
-            string host = "in.logtail.com", 
-            int port = 6517, 
+            string tokenKey = "logtail@11993",
             string? appName = null,
             Facility facility = Facility.Local0, 
             PeriodicBatchingSinkOptions? batchConfig = null, 
@@ -55,16 +53,15 @@ namespace Serilog
             string messageIdPropertyName = LogtailFormatter.DefaultMessageIdPropertyName,
             string? sourceHost = null,
             Func<LogEventLevel, Severity>? severityMapping = null, 
-            ITextFormatter? formatter = null)
+            ITextFormatter? formatter = null,
+            string? processId = null,
+            string? processName = null)
         {
-            if (string.IsNullOrWhiteSpace(host))
-                throw new ArgumentException(nameof(host));
-
+           
             batchConfig ??= DefaultBatchOptions;
-            var messageFormatter = GetFormatter(tokenKey, token, appName, facility, outputTemplate, messageIdPropertyName, sourceHost, severityMapping, formatter);
-            var endpoint = ResolveIP(host, port);
-
-            var logtailSink = new LogtailSink(endpoint, messageFormatter);
+            var messageFormatter = GetFormatter(tokenKey, token, appName, facility, outputTemplate, messageIdPropertyName, sourceHost, severityMapping, formatter, processId, processName);
+ 
+            var logtailSink = new LogtailSink(messageFormatter, token);
             var sink = new PeriodicBatchingSink(logtailSink, batchConfig);
 
             return loggerSinkConfig.Sink(sink, restrictedToMinimumLevel);
@@ -99,7 +96,9 @@ namespace Serilog
             string? messageIdPropertyName,
             string? sourceHost,
             Func<LogEventLevel, Severity>? severityMapping = null, 
-            ITextFormatter? formatter = null)
+            ITextFormatter? formatter = null,
+            string? processId = null,
+            string? processName = null)
         {
             ITextFormatter? templateFormatter;
 
@@ -122,7 +121,9 @@ namespace Serilog
                 templateFormatter,
                 messageIdPropertyName,
                 sourceHost,
-                severityMapping
+                severityMapping,
+                processId,
+                processName
             );
         }
 

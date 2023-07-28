@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
+using System.Reflection.Emit;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+
 using Serilog.Events;
 using Serilog.Formatting;
 
@@ -40,15 +44,19 @@ namespace Serilog.Sinks.Logtail
         /// <param name="severityMapping"><inheritdoc cref="LogtailFormatterBase" path="/param[@name='severityMapping']"/></param>
         /// <param name="tokenKey">The key of Logtail token, something like logtail@11111 source_token</param>
         /// <param name="token">Your source token from rsys logtail</param>
+        /// <param name="processId">The process identifier</param>
+        /// <param name="processName">The process name</param>
         public LogtailFormatter(
             string tokenKey,
             string token,
-            Facility facility = Facility.Local0, 
+            Facility facility = Facility.Local0,
             string? applicationName = null,
             ITextFormatter? templateFormatter = null,
             string? messageIdPropertyName = DefaultMessageIdPropertyName,
             string? sourceHost = null,
-            Func<LogEventLevel, Severity>? severityMapping = null)
+            Func<LogEventLevel, Severity>? severityMapping = null,
+            string? processId = null,
+            string? processName = null)
             : base(facility, templateFormatter, sourceHost, severityMapping)
         {
             this.applicationName = applicationName ?? ProcessName;
@@ -63,8 +71,8 @@ namespace Serilog.Sinks.Logtail
                 .AsPrintableAscii()
                 .WithMaxLength(32);
 
-             this.tokenKey = tokenKey;
-             this.token = token;
+            this.tokenKey = tokenKey;
+            this.token = token;
         }
 
         public override string FormatMessage(LogEvent logEvent)
@@ -73,10 +81,35 @@ namespace Serilog.Sinks.Logtail
             var messageId = GetMessageId(logEvent);
 
             var timestamp = logEvent.Timestamp.ToString(DATE_FORMAT);
-            var sd = RenderStructuredData(logEvent);
+            //var sd = RenderStructuredData(logEvent);
             var msg = RenderMessage(logEvent);
 
-            return $"<{priority}>1 {timestamp} {Host} {applicationName} {ProcessId} {messageId} {sd} {msg}";
+            var a = new
+            {
+                message = msg,
+                dt = timestamp,
+                level = logEvent.Level.ToString(),
+                platform = "syslog",
+                osplatform = "browser",
+                priority = priority,
+                msgid = messageId,
+                syslog= new
+                {
+                    appname = applicationName ?? "syslog",
+                    facility = this.facility.ToString(),
+                    host = this.Host,
+                    hostname = this.Host,
+                    logtail_11993 = new Dictionary<string, object?>()
+                },
+                
+            };
+             
+            if (logEvent.Exception is not null)
+            {
+                a.syslog.logtail_11993.Add("ExceptionDetail", logEvent.Exception);
+            }
+
+            return JsonSerializer.Serialize(a);
         }
 
         /// <summary>

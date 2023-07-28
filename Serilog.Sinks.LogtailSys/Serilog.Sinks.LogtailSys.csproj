@@ -1,36 +1,37 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
-    <Description>Fully-featured Serilog sink that logs events to logtail using UDP (rSyslog).</Description>
-    <Authors>Nicholas Brostrom (Nickztar)</Authors>
-    <Company>Effectsoft AB</Company>
-    <VersionPrefix>1.0.2</VersionPrefix>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <AssemblyName>Serilog.Sinks.LogtailSys</AssemblyName>
-    <RootNamespace>Serilog</RootNamespace>
-    <PackageId>Serilog.Sinks.LogtailSys</PackageId>
-    <PackageTags>serilog;syslog;logging;logtail</PackageTags>
-    <PackageIcon>icon.png</PackageIcon>
-    <PackageProjectUrl>https://github.com/Nickztar/Serilog.Sinks.LogtailSys</PackageProjectUrl>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageLicenceUrl>https://github.com/Nickztar/Serilog.Sinks.LogtailSys/blob/master/LICENCE</PackageLicenceUrl>
-    <RepositoryType>git</RepositoryType>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <IsPackable>true</IsPackable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>net7.0</TargetFrameworks>
+		<Description>Fully-featured Serilog sink that logs events to logtail using UDP (rSyslog).</Description>
+		<Authors>Teddy ALBINA</Authors>
+		<Company></Company>
+		<VersionPrefix>0.0.4</VersionPrefix>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<AssemblyName>Serilog.Sinks.LogtailSys</AssemblyName>
+		<RootNamespace>Serilog</RootNamespace>
+		<PackageId>Serilog.Sinks.LogtailSysBlazor</PackageId>
+		<PackageTags>serilog;syslog;logging;logtail;wasm;blazor</PackageTags>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageProjectUrl>https://github.com/TeddyAlbina/Serilog.Sinks.LogtailSysBlazor</PackageProjectUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenceUrl>https://github.com/TeddyAlbina/Serilog.Sinks.LogtailSysBlazor/blob/master/LICENCE</PackageLicenceUrl>
+		<RepositoryType>git</RepositoryType>
+		<GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+		<IsPackable>true</IsPackable>
+		<NoWarn>1701;1702;IDE0161;IDE0160 </NoWarn>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Serilog" Version="2.12.0" />
+		<PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="3.1.0" />
+		<PackageReference Include="System.Text.Json" Version="7.0.3" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Serilog" Version="2.12.0" />
-    <PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="3.1.0" />
-  </ItemGroup>
 
-
-  <ItemGroup>
-    <None Include="icon.png" Pack="true" PackagePath="" />
-    <None Include="../README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="icon.png" Pack="true" PackagePath="" />
+		<None Include="../README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 </Project>
