@@ -5,11 +5,11 @@
 		<Description>Fully-featured Serilog sink that logs events to logtail using UDP (rSyslog).</Description>
 		<Authors>Teddy ALBINA</Authors>
 		<Company></Company>
-		<VersionPrefix>0.0.5</VersionPrefix>
+		<VersionPrefix>0.0.6</VersionPrefix>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-		<AssemblyName>Serilog.Sinks.LogtailSys</AssemblyName>
+		<AssemblyName>Serilog.Sinks.LogtailSysBlazor</AssemblyName>
 		<RootNamespace>Serilog</RootNamespace>
 		<PackageId>Serilog.Sinks.LogtailSysBlazor</PackageId>
 		<PackageTags>serilog;syslog;logging;logtail;wasm;blazor</PackageTags>
