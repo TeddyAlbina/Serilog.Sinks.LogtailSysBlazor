@@ -2,6 +2,8 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net7.0</TargetFrameworks>
+		<Deterministic>true</Deterministic>
+		<DebugType>portable</DebugType>
 		<Description>Fully-featured Serilog sink that logs events to logtail using UDP (rSyslog).</Description>
 		<Authors>Teddy ALBINA</Authors>
 		<Company></Company>
@@ -21,12 +23,23 @@
 		<GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
 		<IsPackable>true</IsPackable>
 		<NoWarn>1701;1702;IDE0161;IDE0160 </NoWarn>
+		<RepositoryUrl>https://github.com/TeddyAlbina/Serilog.Sinks.LogtailSysBlazor</RepositoryUrl>
+		<PackageReleaseNotes>- v0.0.7 Update the format of the outputed json
+- v0.0.8 Add ability to change the ingestion endpoint</PackageReleaseNotes>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Serilog" Version="2.12.0" />
 		<PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="3.1.0" />
 		<PackageReference Include="System.Text.Json" Version="7.0.3" />
+		<PackageReference Include="DotNet.ReproducibleBuilds" Version="1.1.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 
