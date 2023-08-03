@@ -2,12 +2,13 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+
 using Serilog.Configuration;
 using Serilog.Events;
 using Serilog.Formatting;
 using Serilog.Formatting.Display;
-using Serilog.Sinks.PeriodicBatching;
 using Serilog.Sinks.Logtail;
+using Serilog.Sinks.PeriodicBatching;
 
 namespace Serilog
 {
@@ -28,10 +29,9 @@ namespace Serilog
         /// </summary>
         /// <param name="loggerSinkConfig">The logger configuration</param>
         /// <param name="host">Hostname of the syslog server</param>
-        /// <param name="tokenKey">The key of Logtail token, leave empty if not overriding</param>
+        /// <param name="appName">The name of the application. Must be all printable ASCII characters. Max length 32. Defaults to the current process name</param>
         /// <param name="token">Your source token from (rsyslog) logtail</param>
         /// <param name="port">Port the syslog server is listening on</param>
-        /// <param name="appName">The name of the application. Must be all printable ASCII characters. Max length 32. Defaults to the current process name</param>
         /// <param name="facility"><inheritdoc cref="Facility" path="/summary"/> Defaults to <see cref="Facility.Local0"/>.</param>
         /// <param name="batchConfig">Batching configuration</param>
         /// <param name="outputTemplate">A message template describing the output messages</param>
@@ -43,9 +43,8 @@ namespace Serilog
         /// <see cref="!:https://github.com/serilog/serilog/wiki/Formatting-Output"/>
         public static LoggerConfiguration Logtail(
             this LoggerSinkConfiguration loggerSinkConfig,
-            string token,
-            string tokenKey = "logtail@11993",
-            string? appName = null,
+            string token,            
+            string appName,
             Facility facility = Facility.Local0, 
             PeriodicBatchingSinkOptions? batchConfig = null, 
             string? outputTemplate = null,
@@ -58,9 +57,16 @@ namespace Serilog
             string? processName = null,
             Uri? ingestionUri = null)
         {
+            ArgumentException.ThrowIfNullOrEmpty(token);
+            ArgumentException.ThrowIfNullOrEmpty(appName);
+
+            if (ingestionUri is not null && !Uri.IsWellFormedUriString(ingestionUri.AbsoluteUri, UriKind.Absolute)) 
+            {
+                throw new ArgumentException("The ingestion uri is not a valid uri.", nameof(ingestionUri));
+            }
            
             batchConfig ??= DefaultBatchOptions;
-            var messageFormatter = GetFormatter(tokenKey, token, appName, facility, outputTemplate, messageIdPropertyName, sourceHost, severityMapping, formatter, processId, processName);
+            var messageFormatter = GetFormatter("logtail@11993", token, appName, facility, outputTemplate, messageIdPropertyName, sourceHost, severityMapping, formatter, processId, processName);
  
             var logtailSink = new LogtailSink(messageFormatter, token, ingestionUri);
             var sink = new PeriodicBatchingSink(logtailSink, batchConfig);

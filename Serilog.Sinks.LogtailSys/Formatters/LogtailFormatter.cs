@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Serialization;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+
 using Newtonsoft.Json;
 
 using Serilog.Events;
@@ -16,8 +17,14 @@ namespace Serilog.Sinks.Logtail
     /// Formats messages that comply with syslog RFC5424 & Logtail
     /// https://tools.ietf.org/html/rfc5424
     /// </summary>
-    public class LogtailFormatter : LogtailFormatterBase
+    public partial class LogtailFormatter : LogtailFormatterBase
     {
+        [GeneratedRegex("[=\\\"\\]]")]
+        private static partial Regex PropertyClean();
+
+        [GeneratedRegex("[\\]\\\\\"]")]
+        private static partial Regex PropertyCleanSpaceAndBackslashes();
+
         /// <summary>
         /// Used in place of data that cannot be obtained or is unavailable
         /// </summary>
@@ -29,6 +36,7 @@ namespace Serilog.Sinks.Logtail
         private readonly string messageIdPropertyName;
         private readonly string tokenKey;
         private readonly string token;
+        private string? operatingSystemPlatform;
 
         internal const string DefaultMessageIdPropertyName = "SourceContext";
 
@@ -75,8 +83,38 @@ namespace Serilog.Sinks.Logtail
             this.token = token;
         }
 
+        private string GetOsPlatform()
+        {
+            if (string.IsNullOrEmpty(this.operatingSystemPlatform))
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("Browser")))
+                {
+                    this.operatingSystemPlatform = "browser";
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    this.operatingSystemPlatform = "windows";
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    this.operatingSystemPlatform = "linux";
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
+                {
+                    this.operatingSystemPlatform = "freebsd";
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    this.operatingSystemPlatform = "macos";
+                }
+                else
+                {
+                    this.operatingSystemPlatform = "unknown";
+                }
+            }
 
-         
+            return this.operatingSystemPlatform;
+        }
  
         public override string FormatMessage(LogEvent logEvent)
         {
@@ -84,7 +122,7 @@ namespace Serilog.Sinks.Logtail
             var messageId = GetMessageId(logEvent);
 
             var timestamp = logEvent.Timestamp.ToString(DATE_FORMAT);
-            //var sd = RenderStructuredData(logEvent);
+            var sd = RenderStructuredData(logEvent);
             var msg = RenderMessage(logEvent);
 
             var level = logEvent.Level == LogEventLevel.Information ? "Info" : logEvent.Level.ToString();
@@ -95,7 +133,7 @@ namespace Serilog.Sinks.Logtail
                 Dt = timestamp,
                 Level = level,
                 Platform = "syslog",
-                OsPlatform = "browser",
+                OsPlatform = this.GetOsPlatform(),
                 Priority = priority,
                 MessageId = messageId,
                 SysLogMessage = new SysLogMessage
@@ -105,13 +143,17 @@ namespace Serilog.Sinks.Logtail
                     Host = this.Host,
                     HostName = this.Host,
                     Extras = new Dictionary<string, object?>()
-                },
-                
+                }
             };
              
             if (logEvent.Exception is not null)
             {
                 logmessage.SysLogMessage.Extras.Add("exceptionDetail", logEvent.Exception);
+            }
+
+            if (sd is { Count: > 0 })
+            {
+                logmessage.Properties = new Dictionary<string, string>(sd);
             }
 
             return JsonConvert.SerializeObject(logmessage);
@@ -143,16 +185,8 @@ namespace Serilog.Sinks.Logtail
                 : NILVALUE;
         }
 
-        private string RenderStructuredData(LogEvent logEvent)
-        {
-            var properties = logEvent.Properties.Select(kvp =>
-                new KeyValuePair<string, string>(RenderPropertyKey(kvp.Key), RenderPropertyValue(kvp.Value)));
-            var tokenPart = $"{tokenKey}=\"{token}\"";
-            var structuredDataKvps = string.Join(" ", properties.Select(t => $@"{t.Key}=""{t.Value}"""));
-            var structuredData = string.IsNullOrEmpty(structuredDataKvps) ? $"[{tokenPart}]" : $"[{tokenPart} {structuredDataKvps}]";
-
-            return structuredData;
-        }
+        private static Dictionary<string, string> RenderStructuredData(LogEvent logEvent)
+            => logEvent.Properties.ToDictionary(kvp => RenderPropertyKey(kvp.Key), kvp => RenderPropertyValue(kvp.Value));
 
         private static string RenderPropertyKey(string propertyKey)
         {
@@ -161,7 +195,7 @@ namespace Serilog.Sinks.Logtail
 
             // Also remove any '=', ']', and '"", as these are also not permitted in structured data parameter names
             // Unescaped regex pattern: [=\"\]]
-            result = Regex.Replace(result, "[=\\\"\\]]", string.Empty);
+            result = PropertyClean().Replace(result, string.Empty);
 
             return result.WithMaxLength(32);
         }
@@ -179,7 +213,7 @@ namespace Serilog.Sinks.Logtail
                 .TrimAndUnescapeQuotes();
 
             // Use a backslash to escape backslashes, double quotes and closing square brackets
-            return Regex.Replace(result, @"[\]\\""]", match => $@"\{match}");
+            return PropertyCleanSpaceAndBackslashes().Replace(result, match => $@"\{match}");
         }
     }
 }

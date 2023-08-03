@@ -7,7 +7,7 @@
 		<Description>Fully-featured Serilog sink that logs events to logtail using UDP (rSyslog).</Description>
 		<Authors>Teddy ALBINA</Authors>
 		<Company></Company>
-		<VersionPrefix>0.0.8</VersionPrefix>
+		<VersionPrefix>0.0.9</VersionPrefix>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -25,7 +25,8 @@
 		<NoWarn>1701;1702;IDE0161;IDE0160 </NoWarn>
 		<RepositoryUrl>https://github.com/TeddyAlbina/Serilog.Sinks.LogtailSysBlazor</RepositoryUrl>
 		<PackageReleaseNotes>- v0.0.7 Update the format of the outputed json
-- v0.0.8 Add ability to change the ingestion endpoint</PackageReleaseNotes>
+- v0.0.8 Add ability to change the ingestion endpoint
+- v0.0.9 Capture enrichements and put them in a field called properties in the json, get the proper os platform, token and appname parameters are now mandatory </PackageReleaseNotes>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

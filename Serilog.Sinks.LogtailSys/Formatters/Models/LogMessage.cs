@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+
+using Newtonsoft.Json;
 
 namespace Serilog.Formatters.Models;
 
@@ -24,6 +26,9 @@ internal class LogMessage
 
     [JsonProperty("msgid")]
     public string? MessageId { get; set; }
+
+    [JsonProperty("properties")]
+    public Dictionary<string, string>? Properties { get; set; }
 
     [JsonProperty("syslog")]
     public SysLogMessage? SysLogMessage { get; set; }
