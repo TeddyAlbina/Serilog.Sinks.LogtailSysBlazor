@@ -61,17 +61,10 @@ namespace Serilog.Sinks.Logtail
             this.templateFormatter = templateFormatter;
             this.severityMapping = severityMapping ?? DefaultLogLevelToSeverityMap;
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("Browser")))
-            {
-                Host = sourceHost ?? "";
-            }
-            else
-            {
-                // Use source hostname override, if specified
-                Host = string.IsNullOrEmpty(sourceHost)
-                    ? Environment.MachineName.WithMaxLength(255)
-                    : sourceHost!.WithMaxLength(255);
-            }
+            // Use source hostname override, if specified
+            Host = string.IsNullOrEmpty(sourceHost)
+                ? Environment.MachineName.WithMaxLength(255)
+                : sourceHost!.WithMaxLength(255);
         }
 
         public abstract string FormatMessage(LogEvent logEvent);
