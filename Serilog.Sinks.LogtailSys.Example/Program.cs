@@ -1,13 +1,13 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 using Serilog;
 using Serilog.Debugging;
 
-var logConfig = new LoggerConfiguration()
-    .WriteTo.Console();
- var log = logConfig
-    .WriteTo.Logtail(
+var log = new LoggerConfiguration().WriteTo.Logtail(
         token: "",
         appName: "HI"
     )
@@ -16,6 +16,23 @@ var logConfig = new LoggerConfiguration()
     
 SelfLog.Enable(Console.Error);
 
-log.Error(new Exception("exp"), "Hello, World! 22");
+try
+{
+    using var m = new MemoryStream();
+    var t = await JsonSerializer.DeserializeAsync<Dummy>(m);
+}
+catch (Exception e)
+{
+    log.Error(e, "Hello, World! 22");
+
+}
+
+
 
 Console.ReadKey();
+
+class Dummy {
+
+    [JsonRequired]
+    public string? Name { get; set; }
+}

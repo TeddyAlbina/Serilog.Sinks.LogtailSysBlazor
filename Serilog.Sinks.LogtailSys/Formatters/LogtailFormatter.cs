@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
-using System.Reflection.Emit;
-using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 using Serilog.Events;
+using Serilog.Formatters.Models;
 using Serilog.Formatting;
 
 namespace Serilog.Sinks.Logtail
@@ -75,6 +75,9 @@ namespace Serilog.Sinks.Logtail
             this.token = token;
         }
 
+
+         
+ 
         public override string FormatMessage(LogEvent logEvent)
         {
             var priority = CalculatePriority(logEvent.Level);
@@ -84,32 +87,34 @@ namespace Serilog.Sinks.Logtail
             //var sd = RenderStructuredData(logEvent);
             var msg = RenderMessage(logEvent);
 
-            var a = new
+            var level = logEvent.Level == LogEventLevel.Information ? "Info" : logEvent.Level.ToString();
+
+            var logmessage = new LogMessage
             {
-                message = msg,
-                dt = timestamp,
-                level = logEvent.Level.ToString(),
-                platform = "syslog",
-                osplatform = "browser",
-                priority = priority,
-                msgid = messageId,
-                syslog= new
+                Message = msg,
+                Dt = timestamp,
+                Level = level,
+                Platform = "syslog",
+                OsPlatform = "browser",
+                Priority = priority,
+                MessageId = messageId,
+                SysLogMessage = new SysLogMessage
                 {
-                    appname = applicationName ?? "syslog",
-                    facility = this.facility.ToString(),
-                    host = this.Host,
-                    hostname = this.Host,
-                    logtail_11993 = new Dictionary<string, object?>()
+                    AppName = applicationName ?? "syslog",
+                    Facility = this.facility.ToString(),
+                    Host = this.Host,
+                    HostName = this.Host,
+                    Extras = new Dictionary<string, object?>()
                 },
                 
             };
              
             if (logEvent.Exception is not null)
             {
-                a.syslog.logtail_11993.Add("ExceptionDetail", logEvent.Exception);
+                logmessage.SysLogMessage.Extras.Add("exceptionDetail", logEvent.Exception);
             }
 
-            return JsonSerializer.Serialize(a);
+            return JsonConvert.SerializeObject(logmessage);
         }
 
         /// <summary>
