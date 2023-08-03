@@ -5,7 +5,7 @@
 		<Description>Fully-featured Serilog sink that logs events to logtail using UDP (rSyslog).</Description>
 		<Authors>Teddy ALBINA</Authors>
 		<Company></Company>
-		<VersionPrefix>0.0.7</VersionPrefix>
+		<VersionPrefix>0.0.8</VersionPrefix>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>

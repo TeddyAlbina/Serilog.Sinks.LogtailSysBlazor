@@ -16,19 +16,20 @@ namespace Serilog.Sinks.Logtail
     /// </summary>
     public class LogtailSink : IBatchedLogEventSink, IDisposable
     {
-        private const string IngestionUri = "https://in.logs.betterstack.com";
-        private static readonly HttpClient httpClient = new ()
-        {
-            BaseAddress = new Uri(IngestionUri, UriKind.Absolute)
-        };
+        private readonly HttpClient httpClient;
 
         private readonly ILogtailFormatter formatter;
 
-        public LogtailSink(ILogtailFormatter formatter, string token)
+        public LogtailSink(ILogtailFormatter formatter, string token, Uri? ingestionUri)
         {
             this.formatter = formatter;
-            httpClient.DefaultRequestHeaders.Authorization
-                = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            this.httpClient = new()
+            {
+                BaseAddress = ingestionUri is null ? new Uri("https://in.logs.betterstack.com", UriKind.Absolute) : ingestionUri
+            };
+
+            this.httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
         }
 
         /// <summary>
@@ -54,6 +55,6 @@ namespace Serilog.Sinks.Logtail
 
         public Task OnEmptyBatchAsync() => Task.CompletedTask;
 
-        public void Dispose() => httpClient.Dispose();
+        public void Dispose() => this.httpClient.Dispose();
     }
 }

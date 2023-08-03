@@ -55,13 +55,14 @@ namespace Serilog
             Func<LogEventLevel, Severity>? severityMapping = null, 
             ITextFormatter? formatter = null,
             string? processId = null,
-            string? processName = null)
+            string? processName = null,
+            Uri? ingestionUri = null)
         {
            
             batchConfig ??= DefaultBatchOptions;
             var messageFormatter = GetFormatter(tokenKey, token, appName, facility, outputTemplate, messageIdPropertyName, sourceHost, severityMapping, formatter, processId, processName);
  
-            var logtailSink = new LogtailSink(messageFormatter, token);
+            var logtailSink = new LogtailSink(messageFormatter, token, ingestionUri);
             var sink = new PeriodicBatchingSink(logtailSink, batchConfig);
 
             return loggerSinkConfig.Sink(sink, restrictedToMinimumLevel);
